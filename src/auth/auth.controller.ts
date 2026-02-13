@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, Request, Body, Get } from '@nestjs/common';
+import { Controller, Post, UseGuards, Request, Body, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
@@ -21,5 +21,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Lấy thông tin User từ Token (Test)' })
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Get('verify')
+  async verifyAccount(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 }

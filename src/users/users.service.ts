@@ -45,4 +45,12 @@ export class UsersService {
   async findOne(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).select('-password').exec();
   }
+
+  async activateUser(id: string): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { isVerified: true },
+      { new: true }
+    ).exec();
+  }
 }

@@ -1,14 +1,48 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from '../email/email.service';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
+        private emailService: EmailService,
     ) { }
+
+    async register(createUserDto: CreateUserDto) {
+        const newUser = await this.usersService.create(createUserDto);
+
+        const token = this.jwtService.sign(
+            { sub: (newUser as any)._id },
+            { expiresIn: '1d' }
+        );
+
+        await this.emailService.sendVerificationEmail(
+            newUser.email,
+            newUser.fullName,
+            token
+        );
+
+        return {
+            message: 'Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.',
+        };
+    }
+
+    async verifyEmail(token: string) {
+        try {
+            const payload = this.jwtService.verify(token);
+
+            await this.usersService.activateUser(payload.sub);
+
+            return { message: 'Xác thực thành công! Tài khoản đã được kích hoạt.' };
+        } catch (error) {
+            throw new BadRequestException('Link xác thực không hợp lệ hoặc đã hết hạn.');
+        }
+    }
 
     async validateUser(username: string, pass: string): Promise<any> {
         const user = await this.usersService.findByUsernameOrEmail(username);
@@ -16,7 +50,11 @@ export class AuthService {
         if (user && (await bcrypt.compare(pass, user.password))) {
 
             if (!user.isActive) {
-                throw new UnauthorizedException('Tài khoản đã bị khóa.');
+                throw new UnauthorizedException('Tài khoản đã bị khóa bởi Admin.');
+            }
+
+            if (!user.isVerified) {
+                throw new UnauthorizedException('Vui lòng kiểm tra email để kích hoạt tài khoản trước khi đăng nhập!');
             }
 
             const { password, ...result } = user.toObject();
