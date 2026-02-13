@@ -12,6 +12,7 @@ async function bootstrap() {
     .setTitle('Tet Countdown API')
     .setDescription('API documentation for Tet Countdown & AI Calligraphy')
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('Calligraphy')
     .build();
 

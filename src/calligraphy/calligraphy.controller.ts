@@ -1,34 +1,37 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Ip, Get } from '@nestjs/common';
 import { CalligraphyService } from './calligraphy.service';
 import { CreateCalligraphyDto } from './dto/create-calligraphy.dto';
-import { UpdateCalligraphyDto } from './dto/update-calligraphy.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('Calligraphy (Ông Đồ)')
+@ApiBearerAuth()
 @Controller('calligraphy')
 export class CalligraphyController {
-  constructor(private readonly calligraphyService: CalligraphyService) {}
+  constructor(private readonly calligraphyService: CalligraphyService) { }
 
-  @Post()
-  create(@Body() createCalligraphyDto: CreateCalligraphyDto) {
-    return this.calligraphyService.create(createCalligraphyDto);
+  @UseGuards(AuthGuard('jwt'))
+  @Post('ask')
+  @ApiOperation({ summary: 'Xin chữ đầu năm (Gọi AI)' })
+  async askOngDo(
+    @Body() createDto: CreateCalligraphyDto,
+    @Request() req,
+    @Ip() ip: string
+  ) {
+    const userId = req.user.userId;
+    return this.calligraphyService.giveWord(createDto, userId, ip);
   }
 
-  @Get()
-  findAll() {
-    return this.calligraphyService.findAll();
+  @UseGuards(AuthGuard('jwt'))
+  @Get('history')
+  @ApiOperation({ summary: 'Xem lịch sử xin chữ của bản thân' })
+  async getMyHistory(@Request() req) {
+    return this.calligraphyService.findAllByUser(req.user.userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.calligraphyService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCalligraphyDto: UpdateCalligraphyDto) {
-    return this.calligraphyService.update(+id, updateCalligraphyDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.calligraphyService.remove(+id);
+  @Get('recent')
+  @ApiOperation({ summary: 'Xem 10 người xin chữ gần nhất (Public)' })
+  async getRecent() {
+    return this.calligraphyService.findRecent();
   }
 }

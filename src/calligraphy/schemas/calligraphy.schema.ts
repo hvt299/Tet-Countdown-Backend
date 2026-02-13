@@ -8,7 +8,7 @@ export type CalligraphyDocument = HydratedDocument<Calligraphy>;
 export class Calligraphy {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
     user: User;
-    
+
     @Prop({ required: true })
     userName: string;
 
@@ -23,6 +23,9 @@ export class Calligraphy {
 
     @Prop()
     poem: string;
+
+    @Prop()
+    content: string;
 
     @Prop()
     ipAddress: string;
