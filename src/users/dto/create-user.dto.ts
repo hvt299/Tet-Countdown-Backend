@@ -15,11 +15,13 @@ export class CreateUserDto {
     @IsNotEmpty()
     email: string;
 
-    @ApiProperty({ example: 'MatKhauManh123', description: 'Mật khẩu mạnh (Min 8, 1 Hoa, 1 Thường, 1 Số)' })
+    @ApiProperty({ example: 'MatKhauManh@123', description: 'Mật khẩu mạnh (Min 8 ký tự, 1 hoa, 1 thường, 1 số, 1 ký tự đặc biệt)' })
     @IsString()
+    @IsNotEmpty()
     @MinLength(8, { message: 'Mật khẩu phải có tối thiểu 8 ký tự' })
-    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
-        message: 'Mật khẩu quá yếu: Phải chứa ít nhất 1 chữ thường, 1 chữ hoa và 1 số',
+    @Matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+        message: 'Mật khẩu quá yếu: Phải chứa ít nhất 1 chữ thường, 1 chữ hoa, 1 số và 1 ký tự đặc biệt',
     })
     password: string;
 
