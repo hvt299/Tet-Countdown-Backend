@@ -33,8 +33,13 @@ export class UsersService {
     return newUser.save();
   }
 
-  async findByUsername(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username }).exec();
+  async findByUsernameOrEmail(identifier: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({
+      $or: [
+        { username: identifier },
+        { email: identifier }
+      ]
+    }).exec();
   }
 
   async findOne(id: string): Promise<UserDocument | null> {
