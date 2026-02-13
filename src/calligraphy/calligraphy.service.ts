@@ -54,8 +54,10 @@ export class CalligraphyService {
       }
     }
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    vietnamTime.setUTCHours(0, 0, 0, 0);
+    const startOfDay = new Date(vietnamTime.getTime() - (7 * 60 * 60 * 1000));
 
     const countToday = await this.calligraphyModel.countDocuments({
       user: userId as any,
