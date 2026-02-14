@@ -12,6 +12,7 @@ import { EmailModule } from './email/email.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
