@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Ip, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Ip, Get, Param } from '@nestjs/common';
 import { CalligraphyService } from './calligraphy.service';
 import { CreateCalligraphyDto } from './dto/create-calligraphy.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -30,8 +30,14 @@ export class CalligraphyController {
   }
 
   @Get('recent')
-  @ApiOperation({ summary: 'Xem 10 người xin chữ gần nhất (Public)' })
+  @ApiOperation({ summary: 'Xem 10 người xin chữ gần nhất (năm hiện tại)' })
   async getRecent() {
     return this.calligraphyService.findRecent();
+  }
+
+  @Get('public/:id')
+  @ApiOperation({ summary: 'Xem chi tiết 1 bức thư pháp qua Link chia sẻ (Public)' })
+  async getPublicCalligraphy(@Param('id') id: string) {
+    return this.calligraphyService.findByIdPublic(id);
   }
 }

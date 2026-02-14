@@ -159,6 +159,24 @@ export class CalligraphyService {
   }
 
   async findRecent(): Promise<Calligraphy[]> {
-    return this.calligraphyModel.find().sort({ createdAt: -1 }).limit(10).populate('user', 'fullName avatar').exec();
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    const currentYear = vietnamTime.getUTCFullYear();
+    const startOfYearVN = new Date(Date.UTC(currentYear, 0, 1, 0, 0, 0));
+    const startOfYearUTC = new Date(startOfYearVN.getTime() - (7 * 60 * 60 * 1000));
+
+    return this.calligraphyModel.find({ createdAt: { $gte: startOfYearUTC } })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('user', 'fullName avatar')
+      .exec();
+  }
+
+  async findByIdPublic(id: string): Promise<Calligraphy> {
+    const item = await this.calligraphyModel.findById(id).populate('user', 'fullName avatar').exec();
+    if (!item) {
+      throw new HttpException('Không tìm thấy bức thư pháp này!', HttpStatus.NOT_FOUND);
+    }
+    return item;
   }
 }
