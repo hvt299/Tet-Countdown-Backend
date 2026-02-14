@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 
@@ -82,5 +83,40 @@ export class AuthService {
                 avatar: user.avatar
             }
         };
+    }
+
+    async forgotPassword(email: string) {
+        const user = await this.usersService.findByEmail(email);
+        if (!user) {
+            return { message: 'Nếu email tồn tại, link khôi phục đã được gửi.' };
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+        await user.save();
+
+        await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+
+        return { message: 'Nếu email tồn tại, link khôi phục đã được gửi.' };
+    }
+
+    async resetPassword(token: string, newPassword: string) {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await this.usersService.findByValidResetToken(hashedToken);
+
+        if (!user) {
+            throw new BadRequestException('Link không hợp lệ hoặc đã hết hạn!');
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        return { message: 'Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập.' };
     }
 }

@@ -4,27 +4,27 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-    private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter;
 
-    constructor(private configService: ConfigService) {
-        this.transporter = nodemailer.createTransport({
-            host: 'smtp-relay.brevo.com',
-            port: 587,
-            secure: false,
-            auth: {
-                user: this.configService.get<string>('BREVO_EMAIL'),
-                pass: this.configService.get<string>('BREVO_SMTP_KEY'),
-            },
-        });
-    }
+  constructor(private configService: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: this.configService.get<string>('BREVO_EMAIL'),
+        pass: this.configService.get<string>('BREVO_SMTP_KEY'),
+      },
+    });
+  }
 
-    async sendVerificationEmail(to: string, name: string, token: string) {
-        const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:3001';
-        const senderEmail = this.configService.get<string>('BREVO_EMAIL');
+  async sendVerificationEmail(to: string, name: string, token: string) {
+    const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:3001';
+    const senderEmail = this.configService.get<string>('BREVO_EMAIL');
 
-        const url = `${baseUrl}/auth/verify?token=${token}`;
+    const url = `${baseUrl}/auth/verify?token=${token}`;
 
-        const htmlContent = `
+    const htmlContent = `
       <div style="background-color: #f4f4f4; padding: 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
           
@@ -62,17 +62,49 @@ export class EmailService {
       </div>
     `;
 
-        try {
-            await this.transporter.sendMail({
-                from: `"Tết Countdown" <${senderEmail}>`,
-                to: to,
-                subject: '🧧 Xác thực tài khoản Tết Countdown',
-                html: htmlContent,
-            });
-            console.log(`📧 Email sent successfully to ${to}`);
-        } catch (error) {
-            console.error('Error sending email:', error);
-            throw new Error('Không thể gửi email xác thực'); 
-        }
+    try {
+      await this.transporter.sendMail({
+        from: `"Tết Countdown" <${senderEmail}>`,
+        to: to,
+        subject: '🧧 Xác thực tài khoản Tết Countdown',
+        html: htmlContent,
+      });
+      console.log(`📧 Email sent successfully to ${to}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw new Error('Không thể gửi email xác thực');
     }
+  }
+
+  async sendResetPasswordEmail(to: string, token: string) {
+    const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:3001';
+    const senderEmail = this.configService.get<string>('BREVO_EMAIL');
+    const resetLink = `${baseUrl}/reset-password?token=${token}`;
+
+    const htmlContent = `
+        <div style="background-color: #f4f4f4; padding: 20px; font-family: sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 40px 30px; text-align: center;">
+                <h2 style="color: #d32f2f;">Yêu cầu đặt lại mật khẩu</h2>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản tại Tết Countdown.</p>
+                <p>Vui lòng bấm vào nút bên dưới để tạo mật khẩu mới (Link có hiệu lực 15 phút):</p>
+                <a href="${resetLink}" style="background-color: #d32f2f; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; margin: 20px 0;">
+                    ĐẶT LẠI MẬT KHẨU
+                </a>
+                <p style="font-size: 12px; color: #666;">Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+            </div>
+        </div>
+        `;
+
+    try {
+      await this.transporter.sendMail({
+        from: `"Tết Countdown" <${senderEmail}>`,
+        to: to,
+        subject: '🧧 [Tết Countdown] Đặt lại mật khẩu',
+        html: htmlContent,
+      });
+    } catch (error) {
+      console.error('Error sending reset password email:', error);
+      throw new Error('Không thể gửi email khôi phục');
+    }
+  }
 }

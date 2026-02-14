@@ -53,4 +53,40 @@ export class UsersService {
       { new: true }
     ).exec();
   }
+
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email }).exec();
+  }
+
+  async findByValidResetToken(hashedToken: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: new Date() },
+    }).exec();
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.userModel.findById(userId).select('-password -resetPasswordToken -resetPasswordExpires').exec();
+    if (!user) throw new BadRequestException('Không tìm thấy người dùng');
+    return user;
+  }
+
+  async updateProfile(userId: string, updateData: any) {
+    return this.userModel.findByIdAndUpdate(userId, updateData, { new: true })
+      .select('-password -resetPasswordToken -resetPasswordExpires').exec();
+  }
+
+  async changePassword(userId: string, changePasswordDto: any) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new BadRequestException('Không tìm thấy người dùng');
+
+    const isPasswordValid = await bcrypt.compare(changePasswordDto.oldPassword, user.password);
+    if (!isPasswordValid) throw new BadRequestException('Mật khẩu cũ không chính xác!');
+
+    const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return { message: 'Đổi mật khẩu thành công!' };
+  }
 }
