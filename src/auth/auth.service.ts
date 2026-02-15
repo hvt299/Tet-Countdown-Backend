@@ -70,7 +70,8 @@ export class AuthService {
             username: user.username,
             sub: user._id,
             role: user.role,
-            fullName: user.fullName
+            fullName: user.fullName,
+            avatar: user.avatar
         };
 
         return {

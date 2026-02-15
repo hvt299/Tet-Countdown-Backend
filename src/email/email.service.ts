@@ -19,10 +19,10 @@ export class EmailService {
   }
 
   async sendVerificationEmail(to: string, name: string, token: string) {
-    const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:3001';
-    const senderEmail = this.configService.get<string>('BREVO_EMAIL');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const senderEmail = this.configService.get<string>('SENDER_EMAIL');
 
-    const url = `${baseUrl}/auth/verify?token=${token}`;
+    const url = `${frontendUrl}/auth/verify?token=${token}`;
 
     const htmlContent = `
       <div style="background-color: #f4f4f4; padding: 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
@@ -77,9 +77,9 @@ export class EmailService {
   }
 
   async sendResetPasswordEmail(to: string, token: string) {
-    const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:3001';
-    const senderEmail = this.configService.get<string>('BREVO_EMAIL');
-    const resetLink = `${baseUrl}/reset-password?token=${token}`;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+    const senderEmail = this.configService.get<string>('SENDER_EMAIL');
+    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
     const htmlContent = `
         <div style="background-color: #f4f4f4; padding: 20px; font-family: sans-serif;">

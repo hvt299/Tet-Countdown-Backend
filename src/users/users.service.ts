@@ -4,11 +4,13 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private jwtService: JwtService
   ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -72,8 +74,24 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, updateData: any) {
-    return this.userModel.findByIdAndUpdate(userId, updateData, { new: true })
+    const updatedUser = await this.userModel.findByIdAndUpdate(userId, updateData, { new: true })
       .select('-password -resetPasswordToken -resetPasswordExpires').exec();
+
+    if (!updatedUser) throw new BadRequestException('Không tìm thấy người dùng');
+
+    const payload = {
+        username: updatedUser.username,
+        sub: updatedUser._id,
+        role: (updatedUser as any).role,
+        fullName: updatedUser.fullName,
+        avatar: updatedUser.avatar 
+    };
+
+    return {
+        message: 'Cập nhật thông tin thành công!',
+        access_token: this.jwtService.sign(payload),
+        user: updatedUser
+    };
   }
 
   async changePassword(userId: string, changePasswordDto: any) {
