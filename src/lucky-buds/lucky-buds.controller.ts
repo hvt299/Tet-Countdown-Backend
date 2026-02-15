@@ -22,6 +22,14 @@ export class LuckyBudsController {
     return this.luckyBudsService.pickLuckyBud(userId);
   }
 
+  @ApiOperation({ summary: 'Lịch sử hái lộc của của bản thân' })
+  @UseGuards(AuthGuard('jwt'))
+  @Get('history')
+  async getHistory(@Req() req: any) {
+    const userId = req.user.userId;
+    return this.luckyBudsService.getHistory(userId);
+  }
+
   @ApiOperation({ summary: 'Xem chi tiết lộc để chia sẻ (Public)' })
   @ApiParam({ name: 'id', description: 'ID của lượt hái lộc (LuckyLog ID)' })
   @ApiResponse({ status: 200, description: 'Trả về thông tin người hái, lời chúc và số xu.' })

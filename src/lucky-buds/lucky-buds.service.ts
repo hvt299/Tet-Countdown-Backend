@@ -39,12 +39,15 @@ export class LuckyBudsService {
       throw new BadRequestException('Hội hái lộc chỉ mở vào 3 ngày Tết (Mùng 1, 2, 3). Hẹn gặp lại bạn năm sau nhé!');
     }
 
-    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(now.setHours(23, 59, 59, 999));
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
     const alreadyPicked = await this.luckyLogModel.findOne({
-      userId: new Types.ObjectId(userId),
-      pickedAt: { $gte: startOfDay, $lte: endOfDay },
+      userId: userId,
+      pickedAt: { $gte: todayStart, $lte: todayEnd },
     });
 
     if (alreadyPicked) {
@@ -113,6 +116,13 @@ export class LuckyBudsService {
 
     if (coin === currentYear) return 'Năm mới thăng hoa, rực rỡ';
     return meanings[coin] || 'Tài lộc đong đầy';
+  }
+
+  async getHistory(userId: string) {
+    return this.luckyLogModel.find({ userId })
+      .populate('wishId', 'content type')
+      .sort({ pickedAt: -1 })
+      .exec();
   }
 
   async getLuckyBudById(id: string) {
