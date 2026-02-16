@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Server } from 'socket.io';
 import { Solar } from 'lunar-javascript';
 import { BauCuaLog, BauCuaLogDocument } from './schemas/bau-cua-log.schema';
+import { BauCuaBet, BauCuaBetDocument } from './schemas/bau-cua-bet.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 
 export type GameState = 'BETTING' | 'SHAKING' | 'RESULT' | 'CLOSED';
@@ -30,6 +31,7 @@ export class BauCuaService {
 
   constructor(
     @InjectModel(BauCuaLog.name) private bauCuaLogModel: Model<BauCuaLogDocument>,
+    @InjectModel(BauCuaBet.name) private bauCuaBetModel: Model<BauCuaBetDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {
     this.startGameLoop();
@@ -84,6 +86,14 @@ export class BauCuaService {
   }
 
   public placeBet(userId: string, animal: string, amount: number) {
+    if (this.currentState === 'CLOSED') {
+      throw new Error('Sòng Bầu Cua chỉ mở cửa vào 3 ngày Tết (Mùng 1, 2, 3). Hẹn gặp lại bạn nhé!');
+    }
+
+    if (!userId) {
+      throw new Error('Không xác định được danh tính người chơi!');
+    }
+
     if (this.currentState !== 'BETTING') {
       throw new Error('Đã hết thời gian đặt cược!');
     }
@@ -103,6 +113,31 @@ export class BauCuaService {
     this.logger.log(`💰 User [${userId}] vừa cược ${amount} xu vào [${animal.toUpperCase()}]`);
 
     this.broadcastGameState();
+  }
+
+  public clearBets(userId: string) {
+    if (this.currentState !== 'BETTING') {
+      throw new Error('Chỉ có thể hủy cược khi đang trong thời gian đặt cược!');
+    }
+
+    const userBets = this.playerBets.get(userId);
+    if (!userBets) return 0;
+
+    let totalRefund = 0;
+    for (const animal of this.FACES) {
+      const amount = userBets[animal];
+      this.totalBets[animal] -= amount;
+      totalRefund += amount;
+      userBets[animal] = 0;
+    }
+
+    this.userModel.findByIdAndUpdate(userId, { $inc: { coins: totalRefund } }).exec();
+
+    this.logger.log(`🔄 User [${userId}] đã hủy cược, hoàn lại ${totalRefund} xu`);
+
+    this.broadcastGameState();
+
+    return totalRefund;
   }
 
   private rollDice(): string[] {
@@ -158,6 +193,18 @@ export class BauCuaService {
             }).exec().catch(err => this.logger.error(`Lỗi cộng tiền user ${userId}`, err));
 
             this.logger.log(`💸 User [${userId}] ${userNetProfit > 0 ? 'thắng' : 'thua'} ${Math.abs(userNetProfit)} xu`);
+
+            try {
+              await this.bauCuaBetModel.create({
+                userId: userId,
+                sessionId: this.currentSessionId,
+                bets: { ...bets },
+                result: this.currentResult,
+                netProfit: userNetProfit
+              });
+            } catch (err) {
+              this.logger.error('Lỗi lưu lịch sử cược cá nhân', err);
+            }
           }
         }
 
@@ -189,5 +236,13 @@ export class BauCuaService {
         result: this.currentState === 'RESULT' ? this.currentResult : [],
       });
     }
+  }
+
+  async getUserHistory(userId: string) {
+    return this.bauCuaBetModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .exec();
   }
 }

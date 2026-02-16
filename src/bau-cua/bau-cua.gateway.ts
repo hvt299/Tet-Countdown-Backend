@@ -46,6 +46,22 @@ export class BauCuaGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         }
     }
 
+    @SubscribeMessage('clearBets')
+    handleClearBets(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: { userId: string }
+    ) {
+        try {
+            const refund = this.bauCuaService.clearBets(payload.userId);
+            client.emit('bauCua:clearSuccess', {
+                message: 'Đã hủy toàn bộ cược!',
+                refund
+            });
+        } catch (error) {
+            client.emit('bauCua:betError', { message: error.message });
+        }
+    }
+
     handleDisconnect(client: Socket) {
         this.logger.log(`Client disconnected: ${client.id}`);
     }
