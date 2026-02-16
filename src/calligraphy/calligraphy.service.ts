@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from '@google/genai';
 import { Calligraphy, CalligraphyDocument } from './schemas/calligraphy.schema';
 import { CreateCalligraphyDto } from './dto/create-calligraphy.dto';
+import { Solar } from 'lunar-javascript';
 
 @Injectable()
 export class CalligraphyService {
@@ -31,14 +32,28 @@ export class CalligraphyService {
   // }
 
   async giveWord(createDto: CreateCalligraphyDto, userId: string, ip: string): Promise<Calligraphy> {
+    const nowTime = new Date();
+    const vnTime = new Date(nowTime.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    const solar = Solar.fromYmd(vnTime.getFullYear(), vnTime.getMonth() + 1, vnTime.getDate());
+    const lunar = solar.getLunar();
+
+    let isTet = lunar.getMonth() === 1 && lunar.getDay() >= 1 && lunar.getDay() <= 10;
+
+    if (!isTet) {
+      throw new HttpException(
+        'Ông Đồ chỉ mở cửa cho chữ từ lúc Giao Thừa đến hết Mùng 10 Âm lịch. Hẹn gặp lại bạn nhé!',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     const lastRequest = await this.calligraphyModel
       .findOne({ user: userId as any })
       .sort({ createdAt: -1 });
 
     if (lastRequest) {
-      const now = new Date().getTime();
-      const lastTime = new Date((lastRequest as any).createdAt).getTime();
-      const diffSeconds = (now - lastTime) / 1000;
+      const currentTimeMs = nowTime.getTime();
+      const lastTimeMs = new Date((lastRequest as any).createdAt).getTime();
+      const diffSeconds = (currentTimeMs - lastTimeMs) / 1000;
 
       const COOLDOWN_TIME = 600;
 
@@ -54,10 +69,9 @@ export class CalligraphyService {
       }
     }
 
-    const now = new Date();
-    const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
-    vietnamTime.setUTCHours(0, 0, 0, 0);
-    const startOfDay = new Date(vietnamTime.getTime() - (7 * 60 * 60 * 1000));
+    const vietnamTimeNow = new Date(nowTime.getTime() + (7 * 60 * 60 * 1000));
+    vietnamTimeNow.setUTCHours(0, 0, 0, 0);
+    const startOfDay = new Date(vietnamTimeNow.getTime() - (7 * 60 * 60 * 1000));
 
     const countToday = await this.calligraphyModel.countDocuments({
       user: userId as any,

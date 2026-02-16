@@ -18,36 +18,27 @@ export class LuckyBudsService {
     const now = new Date();
     const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
 
-    const solarYear = vnTime.getFullYear();
-    const solarMonth = vnTime.getMonth() + 1;
-    const solarDay = vnTime.getDate();
-    const currentHour = vnTime.getHours();
-
-    const solar = Solar.fromYmd(solarYear, solarMonth, solarDay);
+    const solar = Solar.fromYmd(vnTime.getFullYear(), vnTime.getMonth() + 1, vnTime.getDate());
     const lunar = solar.getLunar();
 
     const lunarMonth = lunar.getMonth();
     const lunarDay = lunar.getDay();
 
-    // isTet: Từ Mùng 1 đến hết Mùng 3 Tết
     let isTet = lunarMonth === 1 && lunarDay >= 1 && lunarDay <= 3;
-
-    // isGiaoThua: Đúng Mùng 1 Tết và giờ đang là 00 (từ 00:00 đến 00:59)
-    let isGiaoThua = lunarMonth === 1 && lunarDay === 1 && currentHour === 0;
+    let isGiaoThua = lunarMonth === 1 && lunarDay === 1 && vnTime.getHours() === 0;
 
     if (!isTet) {
       throw new BadRequestException('Hội hái lộc chỉ mở vào 3 ngày Tết (Mùng 1, 2, 3). Hẹn gặp lại bạn năm sau nhé!');
     }
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    const vietnamTimeNow = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    vietnamTimeNow.setUTCHours(0, 0, 0, 0);
+    const startOfDay = new Date(vietnamTimeNow.getTime() - (7 * 60 * 60 * 1000));
+    const endOfDay = new Date(startOfDay.getTime() + (24 * 60 * 60 * 1000) - 1);
 
     const alreadyPicked = await this.luckyLogModel.findOne({
       userId: userId,
-      pickedAt: { $gte: todayStart, $lte: todayEnd },
+      pickedAt: { $gte: startOfDay, $lte: endOfDay },
     });
 
     if (alreadyPicked) {

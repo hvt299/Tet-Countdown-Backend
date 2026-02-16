@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { LuckyBudsModule } from './lucky-buds/lucky-buds.module';
+import { BauCuaModule } from './bau-cua/bau-cua.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LuckyBudsModule } from './lucky-buds/lucky-buds.module';
     UsersModule,
     AuthModule,
     LuckyBudsModule,
+    BauCuaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
