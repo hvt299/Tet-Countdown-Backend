@@ -124,18 +124,21 @@ export class BauCuaService {
     if (!userBets) return 0;
 
     let totalRefund = 0;
+
     for (const animal of this.FACES) {
       const amount = userBets[animal];
-      this.totalBets[animal] -= amount;
-      totalRefund += amount;
-      userBets[animal] = 0;
+      if (amount > 0) {
+        this.totalBets[animal] -= amount;
+        totalRefund += amount;
+        userBets[animal] = 0;
+      }
     }
 
-    this.userModel.findByIdAndUpdate(userId, { $inc: { coins: totalRefund } }).exec();
-
-    this.logger.log(`🔄 User [${userId}] đã hủy cược, hoàn lại ${totalRefund} xu`);
-
-    this.broadcastGameState();
+    if (totalRefund > 0) {
+      this.userModel.findByIdAndUpdate(userId, { $inc: { coins: totalRefund } }).exec();
+      this.logger.log(`🔄 User [${userId}] đã hủy cược, hoàn lại ${totalRefund} xu`);
+      this.broadcastGameState();
+    }
 
     return totalRefund;
   }
