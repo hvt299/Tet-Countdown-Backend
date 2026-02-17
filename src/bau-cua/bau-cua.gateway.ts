@@ -34,12 +34,12 @@ export class BauCuaGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     @SubscribeMessage('placeBet')
-    handlePlaceBet(
+    async handlePlaceBet(
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { userId: string; animal: string; amount: number }
     ) {
         try {
-            this.bauCuaService.placeBet(payload.userId, payload.animal, payload.amount);
+            await this.bauCuaService.placeBet(payload.userId, payload.animal, payload.amount);
             client.emit('bauCua:betSuccess', { message: 'Đặt cược thành công!', ...payload });
         } catch (error) {
             client.emit('bauCua:betError', { message: error.message });
@@ -60,6 +60,16 @@ export class BauCuaGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         } catch (error) {
             client.emit('bauCua:betError', { message: error.message });
         }
+    }
+
+    @SubscribeMessage('syncSession')
+    handleSyncSession(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: { userId: string }
+    ) {
+        const myBets = this.bauCuaService.getPlayerBets(payload.userId);
+        const currentState = this.bauCuaService.getCurrentState();
+        client.emit('bauCua:syncData', { myBets, gameState: currentState });
     }
 
     handleDisconnect(client: Socket) {

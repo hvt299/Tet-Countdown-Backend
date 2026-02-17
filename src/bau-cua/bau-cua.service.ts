@@ -85,7 +85,7 @@ export class BauCuaService {
     this.logger.log(`🎲 VÁN MỚI BẮT ĐẦU! (Mã ván: ${this.currentSessionId})`);
   }
 
-  public placeBet(userId: string, animal: string, amount: number) {
+  public async placeBet(userId: string, animal: string, amount: number) {
     if (this.currentState === 'CLOSED') {
       throw new Error('Sòng Bầu Cua chỉ mở cửa vào 3 ngày Tết (Mùng 1, 2, 3). Hẹn gặp lại bạn nhé!');
     }
@@ -100,6 +100,25 @@ export class BauCuaService {
 
     if (!this.FACES.includes(animal)) {
       throw new Error('Linh vật không hợp lệ!');
+    }
+
+    if (amount <= 0) {
+      throw new Error('Số tiền cược không hợp lệ!');
+    }
+
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new Error('Không tìm thấy thông tin người dùng!');
+    }
+
+    let currentTotalBet = 0;
+    if (this.playerBets.has(userId)) {
+      const userBets = this.playerBets.get(userId)!;
+      currentTotalBet = Object.values(userBets).reduce((a, b) => a + b, 0);
+    }
+
+    if (user.coins < currentTotalBet + amount) {
+      throw new Error('Số dư của bạn không đủ để cược mức này!');
     }
 
     if (!this.playerBets.has(userId)) {
@@ -135,12 +154,19 @@ export class BauCuaService {
     }
 
     if (totalRefund > 0) {
-      this.userModel.findByIdAndUpdate(userId, { $inc: { coins: totalRefund } }).exec();
       this.logger.log(`🔄 User [${userId}] đã hủy cược, hoàn lại ${totalRefund} xu`);
       this.broadcastGameState();
     }
 
     return totalRefund;
+  }
+
+  public getPlayerBets(userId: string) {
+    return this.playerBets.get(userId) || { bau: 0, cua: 0, tom: 0, ca: 0, ga: 0, nai: 0 };
+  }
+
+  public getCurrentState(): GameState {
+    return this.currentState;
   }
 
   private rollDice(): string[] {
