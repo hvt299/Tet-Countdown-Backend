@@ -25,7 +25,7 @@ export class BauCuaService {
 
   private readonly FACES = ['bau', 'cua', 'tom', 'ca', 'ga', 'nai'];
 
-  private readonly TIME_BETTING = 600;
+  private readonly TIME_BETTING = 60;
   private readonly TIME_SHAKING = 10;
   private readonly TIME_RESULT = 10;
 
@@ -211,15 +211,20 @@ export class BauCuaService {
           }
         }
 
-        try {
-          await this.bauCuaLogModel.create({
-            sessionId: this.currentSessionId,
-            result: this.currentResult,
-            totalBet: totalBetAll,
-            totalPayout: totalPayoutAll,
-          });
-        } catch (error) {
-          this.logger.error('Lỗi khi lưu lịch sử Bầu Cua', error);
+        if (totalBetAll > 0) {
+          try {
+            await this.bauCuaLogModel.create({
+              sessionId: this.currentSessionId,
+              result: this.currentResult,
+              totalBet: totalBetAll,
+              totalPayout: totalPayoutAll,
+            });
+            this.logger.log(`💾 Đã lưu lịch sử ván ${this.currentSessionId} (Tổng cược: ${totalBetAll})`);
+          } catch (error) {
+            this.logger.error('Lỗi khi lưu lịch sử Bầu Cua', error);
+          }
+        } else {
+          this.logger.log(`💨 Ván ${this.currentSessionId} không có ai cược, bỏ qua lưu Database.`);
         }
         break;
 
