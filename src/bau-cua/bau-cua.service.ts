@@ -267,6 +267,7 @@ export class BauCuaService {
         time: this.remainingTime,
         sessionId: this.currentSessionId,
         totalBets: this.totalBets,
+        playerCount: this.playerBets.size,
         result: this.currentState === 'RESULT' ? this.currentResult : [],
       });
     }

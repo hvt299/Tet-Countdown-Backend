@@ -29,7 +29,7 @@ export class LotoService {
 
   private readonly TICKET_PRICE = 10;
   private readonly MAX_TICKETS = 3;
-  private readonly TIME_BUYING = 600;
+  private readonly TIME_BUYING = 60;
   private readonly TIME_DRAWING = 10;
 
   constructor(
@@ -101,6 +101,12 @@ export class LotoService {
   }
 
   private startDrawingPhase() {
+    if (this.totalTicketsSold === 0) {
+      this.logger.log(`⏩ Không có ai mua vé, bỏ qua bước Kêu Lô Tô -> Khởi động lại ván mới!`);
+      this.startNewSession();
+      return;
+    }
+
     this.currentState = 'DRAWING';
     this.drawRemainingTime = this.TIME_DRAWING;
     this.logger.log(`⏳ HẾT GIỜ BÁN VÉ -> BẮT ĐẦU KÊU LÔ TÔ (Tổng vé bán: ${this.totalTicketsSold})`);
@@ -152,6 +158,36 @@ export class LotoService {
 
   public getPlayerTickets(userId: string) {
     return this.playerTickets.get(userId) || [];
+  }
+
+  private countWaitingKinh(): number {
+    if (this.currentState !== 'DRAWING') return 0;
+    let waitingUsers = 0;
+
+    for (const [userId, tickets] of this.playerTickets.entries()) {
+      let isUserWaiting = false;
+      for (const ticket of tickets) {
+        for (let r = 0; r < 3; r++) {
+          let matchCount = 0;
+          let targetCount = 0;
+          for (let c = 0; c < 9; c++) {
+            const num = ticket[r][c];
+            if (num > 0) {
+              targetCount++;
+              if (this.drawnNumbers.includes(num)) matchCount++;
+            }
+          }
+
+          if (targetCount === 5 && matchCount === 4) {
+            isUserWaiting = true;
+            break;
+          }
+        }
+        if (isUserWaiting) break;
+      }
+      if (isUserWaiting) waitingUsers++;
+    }
+    return waitingUsers;
   }
 
   public async callKinh(userId: string, ticketIndex: number) {
@@ -253,7 +289,9 @@ export class LotoService {
       sessionId: this.currentSessionId,
       jackpot: this.currentJackpot,
       drawnNumbers: this.drawnNumbers,
-      totalTicketsSold: this.totalTicketsSold
+      totalTicketsSold: this.totalTicketsSold,
+      playerCount: this.playerTickets.size,
+      waitingKinhCount: this.countWaitingKinh()
     };
   }
 
