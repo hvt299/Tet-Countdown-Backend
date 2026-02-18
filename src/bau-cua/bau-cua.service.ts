@@ -155,6 +155,7 @@ export class BauCuaService {
 
     if (totalRefund > 0) {
       this.logger.log(`🔄 User [${userId}] đã hủy cược, hoàn lại ${totalRefund} xu`);
+      this.playerBets.delete(userId);
       this.broadcastGameState();
     }
 

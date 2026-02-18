@@ -29,7 +29,7 @@ export class LotoService {
 
   private readonly TICKET_PRICE = 10;
   private readonly MAX_TICKETS = 3;
-  private readonly TIME_BUYING = 60;
+  private readonly TIME_BUYING = 600;
   private readonly TIME_DRAWING = 10;
 
   constructor(
