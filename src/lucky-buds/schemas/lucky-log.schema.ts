@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export type LuckyLogDocument = LuckyLog & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_lucky_logs' })
 export class LuckyLog {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     userId: Types.ObjectId;

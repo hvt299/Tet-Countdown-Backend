@@ -4,7 +4,7 @@ import { User } from '../../users/schemas/user.schema';
 
 export type CalligraphyDocument = HydratedDocument<Calligraphy>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_calligraphies' })
 export class Calligraphy {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
     user: User;
