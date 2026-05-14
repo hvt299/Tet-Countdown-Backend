@@ -34,6 +34,8 @@ Dựa trên cấu hình `package.json`:
 | **[Socket.io](https://socket.io/)** | `^4.8.3` | Máy chủ WebSockets xử lý Real-time Gaming |
 | **[lunar-javascript](https://github.com/6tail/lunar-javascript)**| `^1.7.7` | Xử lý logic Lịch Âm, kiểm tra thời gian Giao thừa/Ngày Tết |
 | **[@google/genai](https://ai.google.dev/)** | `^1.41.0` | Tích hợp AI Gemini (Tạo thơ, câu đối Xin Chữ Ông Đồ) |
+| **[google-auth-library](https://github.com/googleapis/google-auth-library-nodejs)** | `^10.6.2` | Xử lý xác thực Token từ Google OAuth2 (Google Login) |
+| **[Axios](https://axios-http.com/)** | `^1.16.0` | Gọi HTTP Request lấy thông tin người dùng từ Google API |
 | **[@getbrevo/brevo](https://www.brevo.com/)** | `^3.0.1` | Dịch vụ gửi Email (OTP, Quên mật khẩu) |
 | **[bcrypt](https://www.npmjs.com/package/bcrypt)** | `^6.0.0` | Mã hóa và bảo mật mật khẩu người dùng |
 | **[passport-jwt](https://www.passportjs.org/)**| `^4.0.1` | Strategy xác thực người dùng bằng JWT |
@@ -42,7 +44,10 @@ Dựa trên cấu hình `package.json`:
 ## 🌟 Tính năng nghiệp vụ (Modules)
 
 * **🔐 Auth & Users:**
-  * Xác thực người dùng (JWT, Bcrypt).
+  * Xác thực người dùng đa phương thức: JWT truyền thống và Google OAuth2 (Tự động liên kết/tạo tài khoản).
+  * Mã hóa mật khẩu bảo mật chuẩn bcrypt.
+  * Tính năng cập nhật hồ sơ cá nhân và thay đổi mật khẩu (yêu cầu xác thực mật khẩu cũ).
+  * Hệ thống tài khoản dùng chung (SSO): Người dùng có thể sử dụng cùng một tài khoản cho cả sự kiện Tết và Giáng sinh.
   * Quản lý tài khoản và số dư Xu (Coins) an toàn, chống race-condition.
 
 * **🎲 Bầu Cua Tôm Cá (Real-time Socket):**
@@ -83,7 +88,7 @@ Tạo file `.env` tại thư mục gốc của dự án:
 ```env
 PORT=3001
 FRONTEND_URL=http://localhost:3000
-MONGO_URI=mongodb://localhost:27017/tet-countdown-db
+MONGO_URI=mongodb://localhost:27017/festive_events
 
 GEMINI_API_KEY=YourSecretKeyHere
 
@@ -92,6 +97,7 @@ JWT_EXPIRATION=1d
 
 SENDER_EMAIL=YourEmailHere
 BREVO_API_KEY=YourSecretKeyHere
+GOOGLE_CLIENT_ID=YourSecretKeyHere
 ```
 
 ### 4️⃣ Lệnh chạy (Scripts)
