@@ -3,7 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type BauCuaBetDocument = HydratedDocument<BauCuaBet>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_bau_cua_bets' })
 export class BauCuaBet {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     userId: Types.ObjectId;

@@ -41,4 +41,11 @@ export class AuthController {
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword);
   }
+
+  @Post('google')
+  @ApiOperation({ summary: 'Đăng nhập bằng Google' })
+  @ApiBody({ schema: { type: 'object', properties: { token: { type: 'string' } } } })
+  async googleLogin(@Body('token') token: string) {
+    return this.authService.googleLogin(token);
+  }
 }
