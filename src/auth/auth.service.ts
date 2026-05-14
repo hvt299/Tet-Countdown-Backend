@@ -5,14 +5,24 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { OAuth2Client } from 'google-auth-library';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
+    private googleClient: OAuth2Client;
+
     constructor(
         private usersService: UsersService,
         private jwtService: JwtService,
         private emailService: EmailService,
-    ) { }
+        private configService: ConfigService
+    ) {
+        this.googleClient = new OAuth2Client(
+            this.configService.get<string>('GOOGLE_CLIENT_ID')
+        );
+    }
 
     async register(createUserDto: CreateUserDto) {
         const newUser = await this.usersService.create(createUserDto);
@@ -119,5 +129,45 @@ export class AuthService {
         await user.save();
 
         return { message: 'Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập.' };
+    }
+
+    async googleLogin(token: string) {
+        try {
+            const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!data || !data.email) {
+                throw new BadRequestException('Token Google không hợp lệ!');
+            }
+
+            const { email, name, picture, sub } = data;
+
+            let user = await this.usersService.findByEmail(email);
+
+            if (!user) {
+                const randomPassword = crypto.randomBytes(16).toString('hex') + 'A1@';
+                const username = `google_${sub.substring(0, 8)}`;
+
+                const newUser = await this.usersService.create({
+                    username: username,
+                    email: email,
+                    password: randomPassword,
+                    fullName: name || 'Người dùng Google',
+                    avatar: picture
+                });
+
+                user = await this.usersService.activateUser((newUser as any)._id);
+            }
+
+            if (!user) throw new BadRequestException('Không thể khởi tạo tài khoản.');
+            if (!user.isActive) throw new UnauthorizedException('Tài khoản đã bị khóa.');
+
+            return this.login(user);
+
+        } catch (error) {
+            console.error('Google Auth Error:', error);
+            throw new UnauthorizedException('Xác thực Google thất bại!');
+        }
     }
 }

@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type LotoTicketDocument = LotoTicket & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_loto_tickets' })
 export class LotoTicket {
     @Prop({ required: true })
     sessionId: string;

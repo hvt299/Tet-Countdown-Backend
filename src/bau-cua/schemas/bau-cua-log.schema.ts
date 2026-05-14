@@ -3,7 +3,7 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type BauCuaLogDocument = HydratedDocument<BauCuaLog>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_bau_cua_logs' })
 export class BauCuaLog {
     @Prop({ required: true, unique: true })
     sessionId: string;

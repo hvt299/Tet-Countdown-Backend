@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 export type WishDocument = Wish & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tet_lucky_wishes' })
 export class Wish {
     @Prop({ required: true })
     content: string;
