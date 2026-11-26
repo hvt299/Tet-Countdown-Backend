@@ -170,6 +170,18 @@ export class BauCuaService {
     return this.currentState;
   }
 
+  public getSessionData(userId?: string) {
+    return {
+      state: this.currentState,
+      time: this.remainingTime,
+      sessionId: this.currentSessionId || '',
+      totalBets: this.totalBets,
+      playerCount: this.playerBets.size,
+      result: this.currentState === 'RESULT' ? this.currentResult : [],
+      myBets: userId ? this.getPlayerBets(userId) : { bau: 0, cua: 0, tom: 0, ca: 0, ga: 0, nai: 0 },
+    };
+  }
+
   private rollDice(): string[] {
     return [
       this.FACES[Math.floor(Math.random() * 6)],

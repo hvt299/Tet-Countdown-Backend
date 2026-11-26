@@ -25,8 +25,11 @@ export class User {
     @Prop()
     avatar: string;
 
-    @Prop({ default: 0 })
+    @Prop({ default: 0, min: 0 })
     coins: number;
+
+    @Prop({ default: 0, min: 0 })
+    snowflakes: number;
 
     @Prop({ type: String, enum: UserRole, default: UserRole.USER })
     role: UserRole;

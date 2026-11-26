@@ -10,6 +10,8 @@ import { EmailModule } from './email/email.module';
 import { LuckyBudsModule } from './lucky-buds/lucky-buds.module';
 import { BauCuaModule } from './bau-cua/bau-cua.module';
 import { LotoModule } from './loto/loto.module';
+import { TreesModule } from './trees/trees.module';
+import { GiftsModule } from './gifts/gifts.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { LotoModule } from './loto/loto.module';
     LuckyBudsModule,
     BauCuaModule,
     LotoModule,
+    TreesModule,
+    GiftsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

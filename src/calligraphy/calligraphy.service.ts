@@ -104,23 +104,38 @@ export class CalligraphyService {
       }
     `;
 
-    let response;
+    // CHUỖI MÔ HÌNH DỰ PHÒNG THEO THỨ TỰ ƯU TIÊN: 3.6 Flash -> 2.5 Flash
+    const FALLBACK_MODELS = [
+      'gemini-3.6-flash',
+      'gemini-2.5-flash',
+    ];
+
+    let response: any = null;
+    let successfulModel = '';
 
     try {
-      try {
-        response = await this.genAI.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
-          config: { responseMimeType: 'application/json' },
-        });
-      } catch (err25) {
-        console.warn('Gemini 2.5 gặp sự cố, đang chuyển sang Gemini 2.0...', err25.message);
+      for (const modelName of FALLBACK_MODELS) {
+        try {
+          response = await this.genAI.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: { responseMimeType: 'application/json' },
+          });
 
-        response = await this.genAI.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: prompt,
-          config: { responseMimeType: 'application/json' },
-        });
+          if (response && response.text) {
+            successfulModel = modelName;
+            console.log(`[Ông Đồ AI] Tạo chữ thành công với mô hình: ${modelName}`);
+            break;
+          }
+        } catch (modelErr: any) {
+          console.warn(
+            `[Ông Đồ AI] Mô hình ${modelName} gặp sự cố, chuyển sang mô hình tiếp theo... Chi tiết: ${modelErr?.message || modelErr}`,
+          );
+        }
+      }
+
+      if (!response || !response.text) {
+        throw new Error('Tất cả mô hình Gemini đều quá tải hoặc không khả dụng.');
       }
 
       const rawText = response.text || '{}';

@@ -67,9 +67,8 @@ export class BauCuaGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { userId: string }
     ) {
-        const myBets = this.bauCuaService.getPlayerBets(payload.userId);
-        const currentState = this.bauCuaService.getCurrentState();
-        client.emit('bauCua:syncData', { myBets, gameState: currentState });
+        const sessionData = this.bauCuaService.getSessionData(payload?.userId);
+        client.emit('bauCua:syncData', sessionData);
     }
 
     handleDisconnect(client: Socket) {
